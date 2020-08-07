@@ -2,6 +2,8 @@ package com.strange.bleconnecttest2
 
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.strange.bleconnecttest2.data.AdvertisingData
@@ -100,5 +102,20 @@ class BandInfoActivity() : AppCompatActivity(){
             msg.substring(40, 44).toInt(16).toString(),
             msg.substring(44, 48).toInt(16).toString()
         )
+    }
+
+    // 상단 액션바에 뒤로가기 버튼 추가
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.actionbar_menu, menu)
+
+        return true
+    }
+
+    // 액션바 아이템 클릭 이벤트
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item?.itemId) {
+            R.id.action_back -> finish()
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
