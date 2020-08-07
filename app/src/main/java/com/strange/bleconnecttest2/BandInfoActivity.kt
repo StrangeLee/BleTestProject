@@ -1,0 +1,104 @@
+package com.strange.bleconnecttest2
+
+import android.os.Bundle
+import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
+import androidx.databinding.DataBindingUtil
+import com.strange.bleconnecttest2.data.AdvertisingData
+import com.strange.bleconnecttest2.databinding.ActivityBandInfoBinding
+
+class BandInfoActivity() : AppCompatActivity(){
+
+    private lateinit var binding: ActivityBandInfoBinding
+    private lateinit var scanResult: ByteArray
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_band_info)
+
+        // advertising data 인텐트로 받아오기
+        scanResult = intent.extras.get("data") as ByteArray
+
+//        getAdvertisingData(scanResult)
+
+        // xml 파일에 data 넘겨주는 과정
+        binding.advertising = getAdvertisingData(scanResult)
+
+        printAdvertisingData(scanResult)
+    }
+
+    // log 찍기
+    private fun printAdvertisingData(data : ByteArray) {
+        var msg : String = ""
+        for (b : Byte in data) {
+            msg += String.format("%02x", b)
+        }
+
+        // data 변환 로그 출력
+        Log.d("Data", "whole data : $msg")
+        Log.d("Data", "band id : ${msg.substring(14, 18)}")
+        if (msg.substring(18, 20) == "00") {
+            Log.d("Data", "band mode : 일반 모드")
+        } else {
+            Log.d("Data", "band mode : 운동 모드")
+        }
+
+        when (msg.substring(20, 22)) {
+            "00" -> Log.d("Data", "운동 타입 : 걷기 모드")
+            "01" -> Log.d("Data", "운동 타입 : 달리기 모드")
+            "02" -> Log.d("Data", "운동 타입 : 등산 모드")
+            "03" -> Log.d("Data", "운동 타입 : 자전거 모드")
+        }
+
+        Log.d("Data", "HRM : ${msg.substring(22, 24).toInt(16).toString()}")
+        Log.d("Data", "Step : ${msg.substring(24, 28).toInt(16).toString()}") // 16진수 변환 후 다시 10진수 String 으로 변환
+        Log.d("Data", "Calorie : ${msg.substring(28, 32).toInt(16).toString()}")
+        Log.d("Data", "distance : ${msg.substring(32, 36).toInt(16).toString().toInt() / 100}")
+        Log.d("Data", "sleep status : ${msg.substring(36, 38).toInt(16).toString()}")
+        Log.d("Data", "hands off : ${msg.substring(38, 40).toInt(16).toString()}")
+        Log.d("Data", "sleep time : ${msg.substring(40, 44).toInt(16).toString()}")
+        Log.d("Data", "condition : ${msg.substring(44, 48).toInt(16).toString()}")
+    }
+
+    // AdvertisingData.class 에 맞춰서 데이터 변환하기
+    private fun getAdvertisingData(data: ByteArray) : AdvertisingData {
+        var msg : String = ""
+        for (b : Byte in data) {
+            msg += String.format("%02x", b)
+        }
+
+        val bandMode = if (msg.substring(18, 20) == "00") {
+            "일반 모드"
+        } else {
+            "운동 모드"
+        }
+
+        val type = when (msg.substring(20, 22)) {
+            "00" -> "걷기모드"
+            "01" -> "달리기 모드"
+            "02" -> "등산 모드"
+            "03" -> "자전거 모드"
+            else -> "걷기모드"
+        }
+
+        val handsOff = if (msg.substring(38, 40).toInt(16).toString() == "00") {
+            "착용중"
+        } else {
+            "미착용"
+        }
+
+        return AdvertisingData(
+            msg.substring(14, 18),
+            bandMode,
+            type,
+            msg.substring(22, 24).toInt(16).toString(),
+            msg.substring(24, 28).toInt(16).toString(),
+            msg.substring(28, 32).toInt(16).toString(),
+            (msg.substring(32, 36).toInt(16).toString().toInt() / 100).toString(),
+            msg.substring(36, 38).toInt(16).toString(),
+            handsOff,
+            msg.substring(40, 44).toInt(16).toString(),
+            msg.substring(44, 48).toInt(16).toString()
+        )
+    }
+}
