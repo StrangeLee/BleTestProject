@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.strange.bleconnecttest2.data.AdvertisingData
 import com.strange.bleconnecttest2.databinding.ActivityBandInfoBinding
+import kotlinx.android.synthetic.main.activity_band_info.view.*
 
 class BandInfoActivity() : AppCompatActivity(){
 
@@ -20,8 +21,6 @@ class BandInfoActivity() : AppCompatActivity(){
 
         // advertising data 인텐트로 받아오기
         scanResult = intent.extras.get("data") as ByteArray
-
-//        getAdvertisingData(scanResult)
 
         // xml 파일에 data 넘겨주는 과정
         binding.advertising = getAdvertisingData(scanResult)
@@ -52,14 +51,14 @@ class BandInfoActivity() : AppCompatActivity(){
             "03" -> Log.d("Data", "운동 타입 : 자전거 모드")
         }
 
-        Log.d("Data", "HRM : ${msg.substring(22, 24).toInt(16).toString()}")
+        Log.d("Data", "HRM : ${msg.substring(22, 24).toInt(16)}")
         Log.d("Data", "Step : ${msg.substring(24, 28).toInt(16).toString()}") // 16진수 변환 후 다시 10진수 String 으로 변환
-        Log.d("Data", "Calorie : ${msg.substring(28, 32).toInt(16).toString()}")
+        Log.d("Data", "Calorie : ${msg.substring(28, 32)}")
         Log.d("Data", "distance : ${msg.substring(32, 36).toInt(16).toString().toInt() / 100}")
-        Log.d("Data", "sleep status : ${msg.substring(36, 38).toInt(16).toString()}")
-        Log.d("Data", "hands off : ${msg.substring(38, 40).toInt(16).toString()}")
-        Log.d("Data", "sleep time : ${msg.substring(40, 44).toInt(16).toString()}")
-        Log.d("Data", "condition : ${msg.substring(44, 48).toInt(16).toString()}")
+        Log.d("Data", "sleep status : ${msg.substring(36, 38).toInt(16)}")
+        Log.d("Data", "hands off : ${msg.substring(38, 40).toInt(16)}")
+        Log.d("Data", "sleep time : ${msg.substring(40, 44).toInt(16)}")
+        Log.d("Data", "condition : ${msg.substring(44, 48).toInt(16)}")
     }
 
     // AdvertisingData.class 에 맞춰서 데이터 변환하기
@@ -68,6 +67,8 @@ class BandInfoActivity() : AppCompatActivity(){
         for (b : Byte in data) {
             msg += String.format("%02x", b)
         }
+
+        binding.root.tv_rowdata.text = msg
 
         val bandMode = if (msg.substring(18, 20) == "00") {
             "일반 모드"
@@ -84,23 +85,23 @@ class BandInfoActivity() : AppCompatActivity(){
         }
 
         val handsOff = if (msg.substring(38, 40).toInt(16).toString() == "00") {
-            "착용중"
-        } else {
             "미착용"
+        } else {
+            "착용중"
         }
 
         return AdvertisingData(
             msg.substring(14, 18),
-            bandMode,
-            type,
-            msg.substring(22, 24).toInt(16).toString(),
-            msg.substring(24, 28).toInt(16).toString(),
-            msg.substring(28, 32).toInt(16).toString(),
-            (msg.substring(32, 36).toInt(16).toString().toInt() / 100).toString(),
-            msg.substring(36, 38).toInt(16).toString(),
-            handsOff,
-            msg.substring(40, 44).toInt(16).toString(),
-            msg.substring(44, 48).toInt(16).toString()
+            "밴드 모드 : $bandMode",
+            "운동 타입 : $type",
+            "심박수 : " + msg.substring(22, 24).toInt(16).toString(),
+            "걸음수 : " + msg.substring(24, 28).toInt(16).toString(),
+            "칼로리 : " + msg.substring(28, 32).toInt(16).toString() + "Kcal",
+            "이동거리 : " + (msg.substring(32, 36).toInt(16).toString().toInt() / 100).toString() + "km",
+            "수면 상태 : " + msg.substring(36, 38).toInt(16).toString(),
+            "착용상태 : $handsOff",
+            "수면시간 : " + msg.substring(40, 44).toInt(16).toString(),
+            "컨디션 인덱스 : " + msg.substring(44, 48).toInt(16).toString()
         )
     }
 
