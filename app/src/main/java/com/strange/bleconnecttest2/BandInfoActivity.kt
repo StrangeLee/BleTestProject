@@ -26,6 +26,8 @@ class BandInfoActivity : AppCompatActivity(){
         // advertising data 인텐트로 받아오기
         scanResult = intent.extras.get("data") as ByteArray
 
+        Log.d("RSSI", intent.extras.get("rssi").toString())
+
         // xml 파일에 data 넘겨주는 과정
         binding.advertising = getAdvertisingData(scanResult)
 
@@ -36,6 +38,9 @@ class BandInfoActivity : AppCompatActivity(){
             clipboard.primaryClip = clip
             toast("Row Data값을 복사했습니다.")
         }
+
+        // rssi textview vlaue 설정
+        binding.root.tv_rssi.text = "RSSI : " + intent.extras.get("rssi").toString()
 
         printAdvertisingData(scanResult)
     }

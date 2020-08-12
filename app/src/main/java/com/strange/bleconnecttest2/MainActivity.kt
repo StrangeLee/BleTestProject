@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var leDeviceListAdapter : LeDeviceListAdapter
     private var fullDeviceInfo = ArrayList<HashMap<BluetoothDevice, ByteArray>>()
+    private var rssiList = ArrayList<Int>()
 
     // device scan callback
     private var leScanCallback : BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback{ device, rssi, scanRecord ->
@@ -52,6 +53,7 @@ class MainActivity : AppCompatActivity() {
                 arrayDevices.add(device)
                 val hashMap = hashMapOf(device to scanRecord)
                 fullDeviceInfo.add(hashMap)
+                rssiList.add(rssi)
             }
             leDeviceListAdapter.notifyDataSetChanged()
             lv_ble_devices.adapter = leDeviceListAdapter
@@ -168,6 +170,7 @@ class MainActivity : AppCompatActivity() {
         // SharedPreferences 로 데이터 보내기
         val intent = Intent(this, BandInfoActivity::class.java)
         intent.putExtra("data", fullDeviceInfo[position][arrayDevices[position]])
+        intent.putExtra("rssi", rssiList[position])// rssi 데이터 넘기기
 
         startActivity(intent) // 현재 Advertising data 화면 으로 이동
     }
