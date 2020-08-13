@@ -72,6 +72,9 @@ class BandInfoActivity : AppCompatActivity(){
         Log.d("Data", "Step : ${msg.substring(24, 28).toInt(16)}") // 16진수 변환 후 다시 10진수 String 으로 변환
         Log.d("Data", "Calorie : ${msg.substring(28, 32)}")
         Log.d("Data", "distance : ${(msg.substring(32, 36).toInt(16).toString().toInt() / 100).toFloat()}")
+        Log.d("Data", "distance : ${msg.substring(32, 36).toInt(16)}")
+        Log.d("Data", "distance : ${msg.substring(32, 36).toInt(16).toString().toFloat() / 100}")
+        Log.d("Data", "distance : ${msg.substring(32, 36).toInt(16).toFloat()}")
         Log.d("Data", "sleep status : ${msg.substring(36, 38).toInt(16)}")
         Log.d("Data", "hands off : ${msg.substring(38, 40).toInt(16)}")
         Log.d("Data", "sleep time : ${msg.substring(40, 44).toInt(16)}")
@@ -114,11 +117,11 @@ class BandInfoActivity : AppCompatActivity(){
             "심박수 : " + msg.substring(22, 24).toInt(16).toString(),
             "걸음수 : " + msg.substring(24, 28).toInt(16).toString(),
             "칼로리 : " + msg.substring(28, 32).toInt(16).toString() + "Kcal",
-            "이동거리 : " + String.format("%.2f", (msg.substring(32, 36).toInt(16).toString().toInt() / 100).toFloat()) + "km",
+            "이동거리 : " + String.format("%.2f", (msg.substring(32, 36).toInt(16).toString().toFloat() / 100)) + "km",
             "수면 상태 : " + msg.substring(36, 38).toInt(16).toString(),
             "착용상태 : $handsOff",
             "수면시간 : " + msg.substring(40, 44).toInt(16).toString(),
-            "컨디션 인덱스 : " + msg.substring(44, 48).toInt(16).toString()
+            "컨디션 인덱스 : " + msg.substring(44, 48) // 16진수 그대로 인지 아닌지 확인 필요
         )
     }
 
