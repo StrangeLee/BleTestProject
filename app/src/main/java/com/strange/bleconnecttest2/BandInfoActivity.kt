@@ -1,9 +1,17 @@
 package com.strange.bleconnecttest2
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanFilter
+import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -12,21 +20,25 @@ import androidx.databinding.DataBindingUtil
 import com.strange.bleconnecttest2.data.AdvertisingData
 import com.strange.bleconnecttest2.databinding.ActivityBandInfoBinding
 import kotlinx.android.synthetic.main.activity_band_info.view.*
+import kotlinx.android.synthetic.main.activity_main.*
+import org.jetbrains.anko.longToast
 import org.jetbrains.anko.toast
+import java.lang.Exception
+import java.util.*
 
 class BandInfoActivity : AppCompatActivity(){
 
     private lateinit var binding: ActivityBandInfoBinding
     private lateinit var scanResult: ByteArray
+    private lateinit var mDevice : BluetoothDevice
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_band_info)
 
-        // advertising data 인텐트로 받아오기
+        // 인텐트로 필요한 정보 받아오기(advertising data, device data)
         scanResult = intent.extras.get("data") as ByteArray
-
-        Log.d("RSSI", intent.extras.get("rssi").toString())
+        mDevice = intent.extras.get("device") as BluetoothDevice
 
         // xml 파일에 data 넘겨주는 과정
         binding.advertising = getAdvertisingData(scanResult)
@@ -122,6 +134,62 @@ class BandInfoActivity : AppCompatActivity(){
         )
     }
 
+    // device scan callback
+    private var mScanCallback = object : ScanCallback() {
+        override fun onScanFailed(errorCode: Int) {
+            super.onScanFailed(errorCode)
+            Log.d("Error", "Error Code : $errorCode")
+        }
+
+        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+            super.onScanResult(callbackType, result)
+            try {
+                runOnUiThread {
+                    val intent = intent
+                    if (result != null) {
+                        intent.putExtra("data", result.scanRecord.bytes) // advertising data 넘기기
+                        intent.putExtra("device", result.device) // device data 넘기기
+                        startActivity(intent)
+                        overridePendingTransition(0, 0)
+                        finish()
+                        toast("화면을 새로고침 하였습니다.")
+                    } else {
+                        longToast("디바이스로 부터 데이터를 얻지 못했습니다. \n다시시도해주세요.")
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        override fun onBatchScanResults(results: MutableList<ScanResult>?) {
+            super.onBatchScanResults(results)
+        }
+    }
+
+    private fun refreshBleScan() {
+        val handler = Handler()
+
+        val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        val mBluetoothLeScanner = mBluetoothAdapter.bluetoothLeScanner
+        val mBluetoothLeAdvertiser = mBluetoothAdapter.bluetoothLeAdvertiser
+
+        val mScanSettings = ScanSettings.Builder()
+        mScanSettings.setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+        val scanSettings = mScanSettings.build()
+
+        handler.postDelayed({
+            mBluetoothLeScanner.stopScan(mScanCallback)
+        }, 8000)
+
+        val scanFilters = Vector<ScanFilter>()
+        val scanFilter = ScanFilter.Builder()
+        scanFilter.setDeviceAddress(mDevice.address)
+        val scan = scanFilter.build()
+        scanFilters.add(scan)
+        mBluetoothLeScanner.startScan(scanFilters, scanSettings, mScanCallback)
+    }
+
     // 상단 액션바에 뒤로가기 버튼 추가
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.actionbar_menu, menu)
@@ -133,6 +201,7 @@ class BandInfoActivity : AppCompatActivity(){
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
             R.id.action_back -> finish()
+            R.id.action_refresh -> refreshBleScan()
         }
         return super.onOptionsItemSelected(item)
     }

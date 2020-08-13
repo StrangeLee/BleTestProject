@@ -169,9 +169,11 @@ class MainActivity : AppCompatActivity() {
     private fun getAdvertisingData(position : Int) {
         // SharedPreferences 로 데이터 보내기
         val intent = Intent(this, BandInfoActivity::class.java)
-        intent.putExtra("data", fullDeviceInfo[position][arrayDevices[position]])
-        intent.putExtra("rssi", rssiList[position])// rssi 데이터 넘기기
+        intent.putExtra("data", fullDeviceInfo[position][arrayDevices[position]]) // advertising data 넘기기
+        intent.putExtra("rssi", rssiList[position]) // rssi 데이터 넘기기
+        intent.putExtra("device", arrayDevices[position]) // device data 넘기기
 
         startActivity(intent) // 현재 Advertising data 화면 으로 이동
+        overridePendingTransition(0, 0)
     }
 }
