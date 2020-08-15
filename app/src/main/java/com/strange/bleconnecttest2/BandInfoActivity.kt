@@ -21,6 +21,7 @@ import com.strange.bleconnecttest2.data.AdvertisingData
 import com.strange.bleconnecttest2.databinding.ActivityBandInfoBinding
 import kotlinx.android.synthetic.main.activity_band_info.view.*
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.view.*
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.toast
 import java.lang.Exception
@@ -153,6 +154,9 @@ class BandInfoActivity : AppCompatActivity(){
                         overridePendingTransition(0, 0)
                         finish()
                         toast("화면을 새로고침 하였습니다.")
+
+                        // refresh btn 활성화
+                        binding.root.btn_scan_refresh.isEnabled = false
                     } else {
                         longToast("디바이스로 부터 데이터를 얻지 못했습니다. \n다시시도해주세요.")
                     }
@@ -182,12 +186,16 @@ class BandInfoActivity : AppCompatActivity(){
             mBluetoothLeScanner.stopScan(mScanCallback)
         }, 8000)
 
+
         val scanFilters = Vector<ScanFilter>()
         val scanFilter = ScanFilter.Builder()
         scanFilter.setDeviceAddress(mDevice.address)
         val scan = scanFilter.build()
         scanFilters.add(scan)
         mBluetoothLeScanner.startScan(scanFilters, scanSettings, mScanCallback)
+
+        // refresh btn 비활성화
+        binding.root.btn_scan_refresh.isEnabled = false
     }
 
     // 상단 액션바에 뒤로가기 버튼 추가
