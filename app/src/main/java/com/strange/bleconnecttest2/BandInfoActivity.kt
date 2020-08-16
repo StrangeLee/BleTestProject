@@ -58,7 +58,7 @@ class BandInfoActivity : AppCompatActivity(){
         printAdvertisingData(scanResult)
     }
 
-    // log 찍기
+    // 데이터 log 찍기
     private fun printAdvertisingData(data : ByteArray) {
         var msg : String = ""
         for (b : Byte in data) {
@@ -154,12 +154,13 @@ class BandInfoActivity : AppCompatActivity(){
                         overridePendingTransition(0, 0)
                         finish()
                         toast("화면을 새로고침 하였습니다.")
-
-                        // refresh btn 활성화
-                        binding.root.btn_scan_refresh.isEnabled = false
                     } else {
                         longToast("디바이스로 부터 데이터를 얻지 못했습니다. \n다시시도해주세요.")
+                        // refresh btn 활성화
                     }
+
+                    // refresh btn 활성화
+                    binding.root.btn_scan_refresh.isEnabled = true
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -171,31 +172,41 @@ class BandInfoActivity : AppCompatActivity(){
         }
     }
 
-    private fun refreshBleScan() {
+    // Refresh 기능 
+    private fun refreshBleScan(enable : Boolean) {
         val handler = Handler()
 
         val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         val mBluetoothLeScanner = mBluetoothAdapter.bluetoothLeScanner
         val mBluetoothLeAdvertiser = mBluetoothAdapter.bluetoothLeAdvertiser
 
+        // Bluetooth Scan setting을 BLE로 세팅
         val mScanSettings = ScanSettings.Builder()
         mScanSettings.setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
         val scanSettings = mScanSettings.build()
 
-        handler.postDelayed({
-            mBluetoothLeScanner.stopScan(mScanCallback)
-        }, 8000)
+        when (enable) {
+            true -> {
+                handler.postDelayed({
+                    mBluetoothLeScanner.stopScan(mScanCallback)
+                }, 8000)
 
+                val scanFilters = Vector<ScanFilter>()
+                val scanFilter = ScanFilter.Builder()
+                scanFilter.setDeviceAddress(mDevice.address) // 현재 디바이스의 MAC address 로 Device 검색
+                val scan = scanFilter.build()
+                scanFilters.add(scan)
+                mBluetoothLeScanner.startScan(scanFilters, scanSettings, mScanCallback)
 
-        val scanFilters = Vector<ScanFilter>()
-        val scanFilter = ScanFilter.Builder()
-        scanFilter.setDeviceAddress(mDevice.address)
-        val scan = scanFilter.build()
-        scanFilters.add(scan)
-        mBluetoothLeScanner.startScan(scanFilters, scanSettings, mScanCallback)
-
-        // refresh btn 비활성화
-        binding.root.btn_scan_refresh.isEnabled = false
+                // refresh btn 비활성화
+                binding.root.btn_scan_refresh.isEnabled = false
+            }
+            false -> {
+                mBluetoothLeScanner.stopScan(mScanCallback)
+                // refresh btn 비활성화
+                binding.root.btn_scan_refresh.isEnabled = true
+            }
+        }
     }
 
     // 상단 액션바에 뒤로가기 버튼 추가
@@ -209,7 +220,7 @@ class BandInfoActivity : AppCompatActivity(){
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
             R.id.action_back -> finish()
-            R.id.action_refresh -> refreshBleScan()
+            R.id.action_refresh -> refreshBleScan(binding.root.btn_scan_refresh.isEnabled) // 새로고침 버튼
         }
         return super.onOptionsItemSelected(item)
     }
