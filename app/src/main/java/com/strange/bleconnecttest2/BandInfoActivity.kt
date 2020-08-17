@@ -2,10 +2,7 @@ package com.strange.bleconnecttest2
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
-import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
+import android.bluetooth.le.*
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -32,6 +29,10 @@ class BandInfoActivity : AppCompatActivity(){
     private lateinit var binding: ActivityBandInfoBinding
     private lateinit var scanResult: ByteArray
     private lateinit var mDevice : BluetoothDevice
+
+    private lateinit var refreshButton : MenuItem
+
+    private lateinit var mBluetoothLeScanner : BluetoothLeScanner
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -154,13 +155,11 @@ class BandInfoActivity : AppCompatActivity(){
                         overridePendingTransition(0, 0)
                         finish()
                         toast("화면을 새로고침 하였습니다.")
+                        refreshButton.isEnabled = true
+                        mBluetoothLeScanner.stopScan(this) // 여러번 Scan 하는것을 방지하기 위해 Scan 성공시 바로 Stop
                     } else {
                         longToast("디바이스로 부터 데이터를 얻지 못했습니다. \n다시시도해주세요.")
-                        // refresh btn 활성화
                     }
-
-                    // refresh btn 활성화
-                    binding.root.btn_scan_refresh.isEnabled = true
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -172,12 +171,12 @@ class BandInfoActivity : AppCompatActivity(){
         }
     }
 
-    // Refresh 기능 
+    // Refresh 기능
     private fun refreshBleScan(enable : Boolean) {
         val handler = Handler()
 
         val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        val mBluetoothLeScanner = mBluetoothAdapter.bluetoothLeScanner
+        mBluetoothLeScanner = mBluetoothAdapter.bluetoothLeScanner
         val mBluetoothLeAdvertiser = mBluetoothAdapter.bluetoothLeAdvertiser
 
         // Bluetooth Scan setting을 BLE로 세팅
@@ -189,7 +188,11 @@ class BandInfoActivity : AppCompatActivity(){
             true -> {
                 handler.postDelayed({
                     mBluetoothLeScanner.stopScan(mScanCallback)
-                }, 8000)
+                    refreshButton.isEnabled = true
+                }, 5000)
+
+                // refresh btn 비활성화
+                refreshButton.isEnabled = false
 
                 val scanFilters = Vector<ScanFilter>()
                 val scanFilter = ScanFilter.Builder()
@@ -197,14 +200,12 @@ class BandInfoActivity : AppCompatActivity(){
                 val scan = scanFilter.build()
                 scanFilters.add(scan)
                 mBluetoothLeScanner.startScan(scanFilters, scanSettings, mScanCallback)
-
-                // refresh btn 비활성화
-                binding.root.btn_scan_refresh.isEnabled = false
+                return
             }
             false -> {
                 mBluetoothLeScanner.stopScan(mScanCallback)
                 // refresh btn 비활성화
-                binding.root.btn_scan_refresh.isEnabled = true
+                refreshButton.isEnabled = true
             }
         }
     }
@@ -220,7 +221,10 @@ class BandInfoActivity : AppCompatActivity(){
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
             R.id.action_back -> finish()
-            R.id.action_refresh -> refreshBleScan(binding.root.btn_scan_refresh.isEnabled) // 새로고침 버튼
+            R.id.action_refresh -> { // 새로고침 버튼
+                refreshButton = item
+                refreshBleScan(refreshButton.isEnabled)
+            }
         }
         return super.onOptionsItemSelected(item)
     }
