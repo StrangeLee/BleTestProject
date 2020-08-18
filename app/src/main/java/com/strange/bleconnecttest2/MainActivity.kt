@@ -48,12 +48,16 @@ class MainActivity : AppCompatActivity() {
     // device scan callback
     private var leScanCallback : BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback{ device, rssi, scanRecord ->
         runOnUiThread {
-            leDeviceListAdapter.addDevices(device)
             if (!arrayDevices.contains(device)) {
-                arrayDevices.add(device)
-                val hashMap = hashMapOf(device to scanRecord)
-                fullDeviceInfo.add(hashMap)
-                rssiList.add(rssi)
+                if (device.name != null) {
+                    if (device.name.startsWith("DXC")) {
+                        leDeviceListAdapter.addDevices(device)
+                        arrayDevices.add(device)
+                        val hashMap = hashMapOf(device to scanRecord)
+                        fullDeviceInfo.add(hashMap)
+                        rssiList.add(rssi)
+                    }
+                }
             }
             leDeviceListAdapter.notifyDataSetChanged()
             lv_ble_devices.adapter = leDeviceListAdapter

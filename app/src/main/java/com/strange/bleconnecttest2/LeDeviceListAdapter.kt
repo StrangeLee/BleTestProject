@@ -17,11 +17,6 @@ class LeDeviceListAdapter(
 
     fun addDevices(device : BluetoothDevice) {
             if (!mLeDevices.contains(device)) {
-//                if (device.name != null) {
-//                    if (device.name.startsWith("DXC")) {
-//
-//                    }
-//                }
                 mLeDevices.add(device)
             }
         }
