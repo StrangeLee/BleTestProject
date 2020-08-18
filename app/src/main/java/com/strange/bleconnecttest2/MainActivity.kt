@@ -49,15 +49,11 @@ class MainActivity : AppCompatActivity() {
     private var leScanCallback : BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback{ device, rssi, scanRecord ->
         runOnUiThread {
             if (!arrayDevices.contains(device)) {
-                if (device.name != null) {
-                    if (device.name.startsWith("DXC")) {
-                        leDeviceListAdapter.addDevices(device)
-                        arrayDevices.add(device)
-                        val hashMap = hashMapOf(device to scanRecord)
-                        fullDeviceInfo.add(hashMap)
-                        rssiList.add(rssi)
-                    }
-                }
+                leDeviceListAdapter.addDevices(device)
+                arrayDevices.add(device)
+                val hashMap = hashMapOf(device to scanRecord)
+                fullDeviceInfo.add(hashMap)
+                rssiList.add(rssi)
             }
             leDeviceListAdapter.notifyDataSetChanged()
             lv_ble_devices.adapter = leDeviceListAdapter
@@ -85,20 +81,13 @@ class MainActivity : AppCompatActivity() {
 
         // Scanning 버튼 클릭 이벤트
         btn_scan_refresh.setOnClickListener {
+            checkGpsIsEnabled()
             toast("Scanning..")
             arrayDevices.clear()
             fullDeviceInfo.clear()
             leDeviceListAdapter.clear()
             leDeviceListAdapter.notifyDataSetChanged()
             startScan()
-        }
-
-        // gps 켜져 있는지 확인
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            toast("BLE기기를 겁색하기 위해서 GPS를 켜주셔야합니다.")
-            val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-            startActivity(intent)
         }
     }
 
@@ -111,7 +100,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 블루투스 on
-        val apply = bluetoothAdapter?.takeIf { it.isDisabled }?.apply {
+        bluetoothAdapter?.takeIf { it.isDisabled }?.apply {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
         }
@@ -179,5 +168,15 @@ class MainActivity : AppCompatActivity() {
 
         startActivity(intent) // 현재 Advertising data 화면 으로 이동
         overridePendingTransition(0, 0)
+    }
+
+    private fun checkGpsIsEnabled() {
+        // gps 켜져 있는지 확인
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            toast("BLE기기를 겁색하기 위해서 GPS를 켜주셔야합니다.")
+            val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+            startActivityForResult(intent, 1000)
+        }
     }
 }
