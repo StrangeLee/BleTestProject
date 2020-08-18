@@ -30,7 +30,7 @@ class BandInfoActivity : AppCompatActivity(){
     private lateinit var scanResult: ByteArray
     private lateinit var mDevice : BluetoothDevice
 
-    private lateinit var refreshButton : MenuItem
+    private lateinit var refreshButton : MenuItem // 상단 액션 바의 버튼을 사용할려면 MenuItem을 설정해야 한다.
 
     private lateinit var mBluetoothLeScanner : BluetoothLeScanner
 
@@ -95,6 +95,7 @@ class BandInfoActivity : AppCompatActivity(){
     // AdvertisingData.class 에 맞춰서 데이터 변환하기
     private fun getAdvertisingData(data: ByteArray) : AdvertisingData {
         var msg : String = ""
+        // ByteArray 타입을 byte로 나눈 후 String으로 변환
         for (b : Byte in data) {
             msg += String.format("%02x", b)
         }
@@ -171,13 +172,27 @@ class BandInfoActivity : AppCompatActivity(){
         }
     }
 
-    // Refresh 기능
+    /**
+     * refresh 기능
+     * 코드 설명 : MainActivity.kt 에서 Intent 로 BluetoothDevice 객체를 넘겨받은 후
+     * Mac Address(BluetoothDevice.address) 를 가져와 해당 address 를 가진 Device 를 찾는 코드이다.
+     *
+     * MainActivity.kt 에서의 ble device 를 찾는 방식과 다른 점은 BluetoothScanner 객체를 이용한다는 점과
+     * BluetoothAdapter.LeScanCallback 이 아닌 ScanCallback 을 사용한다는 점이 다르다.
+     *
+     * 나중에 이 두개의 검색 방법들을 한 클래스에 모아서 사용할 것.
+     *
+     * mScanCallback 을 살펴보면
+     * intent에 데이터를 다시 세팅하는 것과
+     * BluetoothScanner.stopScan 을 호출함으로 여러번 Scan하는 것을 방지한다.
+     */
     private fun refreshBleScan(enable : Boolean) {
         val handler = Handler()
 
+        // Bluetooth adapter 및 scanner 설정
         val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         mBluetoothLeScanner = mBluetoothAdapter.bluetoothLeScanner
-        val mBluetoothLeAdvertiser = mBluetoothAdapter.bluetoothLeAdvertiser
+//        val mBluetoothLeAdvertiser = mBluetoothAdapter.bluetoothLeAdvertiser
 
         // Bluetooth Scan setting을 BLE로 세팅
         val mScanSettings = ScanSettings.Builder()
